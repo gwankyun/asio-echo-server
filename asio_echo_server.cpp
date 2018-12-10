@@ -61,42 +61,6 @@ void write_handler(const error_code_t &ec,
 	}
 }
 
-//bool async_write(shared_ptr<session_t> session, io_context_t &io_context)
-//{
-//	INFO("log");
-//	auto &socket = session->socket;
-//	auto &write_queue = session->write_queue;
-//	if (!write_queue.empty())
-//	{
-//		auto &front = write_queue.front();
-//		auto size = std::min(session_t::write_size, front.size() - session->write_offset);
-//		socket.async_write_some(
-//			asio::buffer(front.data() + session->write_offset, size),
-//			[session, &io_context](const error_code_t &ec, std::size_t size)
-//		{
-//			write_handler(ec, size, session, io_context);
-//		});
-//		return true;
-//	}
-//	else
-//	{
-//		return false;
-//	}
-//}
-//
-//void async_read(shared_ptr<session_t> session, io_context_t &io_context)
-//{
-//	INFO("log");
-//	auto &buffer = session->buffer;
-//	auto &socket = session->socket;
-//	buffer.resize(session->read_offset + session_t::read_size);
-//	socket.async_read_some(asio::buffer(buffer.data() + session->read_offset, session_t::read_size),
-//		[session, &io_context](const error_code_t &ec, std::size_t size)
-//	{
-//		read_handler(ec, size, session, io_context);
-//	});
-//}
-
 void read_handler(const error_code_t &ec,
 	std::size_t size,
 	shared_ptr<session_t> session,
