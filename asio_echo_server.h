@@ -1,4 +1,6 @@
 #pragma once
+#include <cmath>
+
 #include <iostream>
 #include <memory>
 #include <utility>
@@ -36,12 +38,14 @@ public:
 
 	socket_t socket;
 	vector<char> buffer;
-	std::size_t size = 0;
+	std::size_t read_offset = 0;
+	std::size_t write_offset = 0;
 	queue<vector<char>> write_queue;
 
 	void clear();
 
 	static std::size_t read_size;
+	static std::size_t write_size;
 
 private:
 
