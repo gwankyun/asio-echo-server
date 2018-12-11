@@ -1,5 +1,6 @@
 #pragma once
 #include <cmath>
+#include <cstdint>
 
 #include <iostream>
 #include <memory>
@@ -41,6 +42,8 @@ public:
 	std::size_t read_offset = 0;
 	std::size_t write_offset = 0;
 	queue<vector<char>> write_queue;
+	string address;
+	uint16_t port = 0;
 
 	void clear();
 

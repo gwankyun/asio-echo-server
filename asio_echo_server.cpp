@@ -14,7 +14,7 @@ session_t::session_t(io_context_t &io_context)
 
 session_t::~session_t()
 {
-	INFO("log");
+	INFO("log", "address:{0} port:{1}", address, port);
 }
 
 void session_t::clear()
@@ -33,6 +33,7 @@ void write_handler(const error_code_t &ec,
 	if (ec)
 	{
 		INFO("log", ec.message());
+		io_context.run();
 	}
 	else
 	{
@@ -70,36 +71,42 @@ void read_handler(const error_code_t &ec,
 	if (ec)
 	{
 		INFO("log", ec.message());
+		io_context.run();
 	}
 	else
 	{
 		auto &buffer = session->buffer;
 		auto &socket = session->socket;
+		auto &read_offset = session->read_offset;
+		auto &write_queue = session->write_queue;
 		vector<char> buff;
 		copy_n(buffer.begin(), buffer.size(), back_inserter(buff));
 		buff.push_back('\0');
 		INFO("log", "async_read_some:{0}", buff.data());
 
-		session->read_offset += size;
+		read_offset += size;
 
-		INFO("log", "session->size:{0} g_one_size:{1} size:{2}", session->read_offset, session_t::read_size, size);
+		INFO("log", "session->size:{0} g_one_size:{1} size:{2}", read_offset, session_t::read_size, size);
 
-		if (size == session_t::read_size)
+		INFO("log", "buffer size:{0}", buffer.size());
+
+		if (buffer[read_offset - 1] == '\0')
+		{
+			INFO("log");
+			INFO("log", "read all:{0}", buffer.data());
+			vector<char> vec;
+			copy_n(buffer.begin(), read_offset, back_inserter(vec));
+
+			write_queue.push(std::move(vec));
+
+			session->clear();
+
+			async_write(session, io_context, write_handler);
+		}
+		else
 		{
 			INFO("log");
 			async_read(session, io_context, read_handler);
-		}
-		else if (size < session_t::read_size)
-		{
-			INFO("log");
-			vector<char> vec;
-			copy_n(buffer.begin(), session->read_offset, back_inserter(vec));
-
-			session->write_queue.push(std::move(vec));
-
-			async_write(session, io_context, write_handler);
-
-			session->clear();
 		}
 	}
 }
@@ -112,6 +119,7 @@ void accept_handler(const error_code_t &ec,
 	if (ec)
 	{
 		INFO("log", ec.message());
+		io_context.run();
 	}
 	else
 	{
@@ -121,6 +129,8 @@ void accept_handler(const error_code_t &ec,
 		auto address = re.address().to_string();
 		auto port = re.port();
 		INFO("log", "address:{0} port:{1}", address, port);
+		session->address = address;
+		session->port = port;
 
 		async_read(session, io_context, read_handler);
 
