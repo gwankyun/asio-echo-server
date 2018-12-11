@@ -54,11 +54,20 @@ void write_handler(const error_code_t &ec,
 			if (write_queue.empty())
 			{
 				session->clear();
-				async_read(session, io_context, read_handler);
+				async_read(session,
+					[session, &io_context](const error_code_t &ec, std::size_t size)
+				{
+					read_handler(ec, size, session, io_context);
+				});
 				return;
 			}
 		}
-		async_write(session, io_context, write_handler);
+
+		async_write(session,
+			[session, &io_context](const error_code_t &ec, std::size_t size)
+		{
+			write_handler(ec, size, session, io_context);
+		});
 	}
 }
 
@@ -101,12 +110,20 @@ void read_handler(const error_code_t &ec,
 
 			session->clear();
 
-			async_write(session, io_context, write_handler);
+			async_write(session,
+				[session, &io_context](const error_code_t &ec, std::size_t size)
+			{
+				write_handler(ec, size, session, io_context);
+			});
 		}
 		else
 		{
 			INFO("log");
-			async_read(session, io_context, read_handler);
+			async_read(session,
+				[session, &io_context](const error_code_t &ec, std::size_t size)
+			{
+				read_handler(ec, size, session, io_context);
+			});
 		}
 	}
 }
@@ -132,7 +149,11 @@ void accept_handler(const error_code_t &ec,
 		session->address = address;
 		session->port = port;
 
-		async_read(session, io_context, read_handler);
+		async_read(session,
+			[session, &io_context](const error_code_t &ec, std::size_t size)
+		{
+			read_handler(ec, size, session, io_context);
+		});
 
 		auto next_session = make_shared<session_t>(io_context);
 
