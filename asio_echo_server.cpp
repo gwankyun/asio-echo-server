@@ -11,18 +11,16 @@ void session_t::run()
 {
 	INFO("log");
 	auto self(shared_from_this());
-	auto app = self->app;
 	auto r = async_read(self,
-		[self, app](const error_code_t &ec, std::size_t size)
+		[self](const error_code_t &ec, std::size_t size)
 	{
-		read_handler(ec, size, self, app);
+		read_handler(ec, size, self);
 	});
 }
 
 void write_handler(const error_code_t &ec,
 	std::size_t size,
-	shared_ptr<session_t> session,
-	shared_ptr<application_t> app)
+	shared_ptr<session_t> session)
 {
 	INFO("log");
 	if (ec)
@@ -52,13 +50,13 @@ void write_handler(const error_code_t &ec,
 			{
 				session->clear();
 				auto r = async_read(session,
-					[session, app](const error_code_t &ec, std::size_t size)
+					[session](const error_code_t &ec, std::size_t size)
 				{
-					read_handler(ec, size, session, app);
+					read_handler(ec, size, session);
 				});
 				if (!r)
 				{
-					app->run();
+					session->socket.get_io_context().run();
 					return;
 				}
 				return;
@@ -66,13 +64,13 @@ void write_handler(const error_code_t &ec,
 		}
 
 		auto w = async_write(session,
-			[session, app](const error_code_t &ec, std::size_t size)
+			[session](const error_code_t &ec, std::size_t size)
 		{
-			write_handler(ec, size, session, app);
+			write_handler(ec, size, session);
 		});
 		if (!w)
 		{
-			app->run();
+			session->socket.get_io_context().run();
 			return;
 		}
 	}
@@ -80,8 +78,7 @@ void write_handler(const error_code_t &ec,
 
 void read_handler(const error_code_t &ec,
 	std::size_t size,
-	shared_ptr<session_t> session,
-	shared_ptr<application_t> app)
+	shared_ptr<session_t> session)
 {
 	INFO("log");
 	if (ec)
@@ -121,13 +118,13 @@ void read_handler(const error_code_t &ec,
 			session->clear();
 
 			auto w = async_write(session,
-				[session, app](const error_code_t &ec, std::size_t size)
+				[session](const error_code_t &ec, std::size_t size)
 			{
-				write_handler(ec, size, session, app);
+				write_handler(ec, size, session);
 			});
 			if (!w)
 			{
-				app->run();
+				session->socket.get_io_context().run();
 				return;
 			}
 		}
@@ -135,13 +132,13 @@ void read_handler(const error_code_t &ec,
 		{
 			INFO("log");
 			auto r = async_read(session,
-				[session, app](const error_code_t &ec, std::size_t size)
+				[session](const error_code_t &ec, std::size_t size)
 			{
-				read_handler(ec, size, session, app);
+				read_handler(ec, size, session);
 			});
 			if (!r)
 			{
-				app->run();
+				session->socket.get_io_context().run();
 				return;
 			}
 		}
@@ -150,7 +147,6 @@ void read_handler(const error_code_t &ec,
 
 void accept_handler(const error_code_t &ec, 
 	shared_ptr<session_t> session,
-	shared_ptr<application_t> app,
 	acceptor_t &acceptor)
 {
 	INFO("log");
@@ -169,24 +165,22 @@ void accept_handler(const error_code_t &ec,
 		INFO("log", "address:{0} port:{1}", address, port);
 		session->address = address;
 		session->port = port;
-		session->app = app;
 
 		session->run();
 	}
-	auto next_session = make_shared<session_t>(app->io_context);
+	auto next_session = make_shared<session_t>(session->socket.get_io_context());
 
 	acceptor.async_accept(next_session->socket,
-		[next_session, app, &acceptor](const error_code_t &ec)
+		[next_session, &acceptor](const error_code_t &ec)
 	{
-		accept_handler(ec, next_session, app, acceptor);
+		accept_handler(ec, next_session, acceptor);
 	});
 }
 
 int main()
 {
 	auto logger = spdlog::stdout_color_mt("log");
-	auto app = make_shared<application_t>();
-	auto &io_context = app->io_context;
+	io_context_t io_context;
 
 	acceptor_t acceptor(io_context,
 		endpoint_t(address_t::from_string("0.0.0.0"), 12500));
@@ -195,12 +189,12 @@ int main()
 		auto session = make_shared<session_t>(io_context);
 
 		acceptor.async_accept(session->socket,
-			[session, app, &acceptor](const error_code_t &ec)
+			[session, &acceptor](const error_code_t &ec)
 		{
-			accept_handler(ec, session, app, acceptor);
+			accept_handler(ec, session, acceptor);
 		});
 	}
 
-	app->run();
+	io_context.run();
 	return 0;
 }

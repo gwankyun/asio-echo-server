@@ -3,15 +3,12 @@
 
 void write_handler(const error_code_t &ec,
 	std::size_t size,
-	shared_ptr<session_t> session,
-	shared_ptr<application_t> app);
+	shared_ptr<session_t> session);
 
 void read_handler(const error_code_t &ec,
 	std::size_t size,
-	shared_ptr<session_t> session,
-	shared_ptr<application_t> app);
+	shared_ptr<session_t> session);
 
 void accept_handler(const error_code_t &ec,
 	shared_ptr<session_t> session,
-	shared_ptr<application_t> app,
 	acceptor_t &acceptor);

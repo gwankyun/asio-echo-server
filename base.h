@@ -32,8 +32,6 @@ using acceptor_t = tcp_t::acceptor;
 using resolver_t = tcp_t::resolver;
 using error_code_t = boost::system::error_code;
 
-class application_t;
-
 class session_t : public std::enable_shared_from_this<session_t>
 {
 public:
@@ -49,7 +47,6 @@ public:
 	uint16_t port = 0;
 	bool is_write = false;
 	bool is_read = false;
-	shared_ptr<application_t> app;
 
 	void clear();
 	void run();
@@ -85,32 +82,6 @@ error_code_t session_t::close()
 	error_code_t ec;
 	socket.close(ec);
 	return ec;
-}
-
-class application_t
-{
-public:
-	application_t();
-	~application_t();
-
-	io_context_t io_context;
-	void run();
-
-private:
-
-};
-
-application_t::application_t()
-{
-}
-
-application_t::~application_t()
-{
-}
-
-void application_t::run()
-{
-	io_context.run();
 }
 
 template<typename H>
