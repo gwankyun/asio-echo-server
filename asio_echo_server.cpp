@@ -28,14 +28,12 @@ void session_t::run()
 {
 	INFO("log");
 	auto self(shared_from_this());
-	INFO("log");
 	auto app = self->app;
 	auto r = async_read(self,
 		[self, app](const error_code_t &ec, std::size_t size)
 	{
 		read_handler(ec, size, self, app);
 	});
-	INFO("log");
 }
 
 void write_handler(const error_code_t &ec,
@@ -109,7 +107,6 @@ void read_handler(const error_code_t &ec,
 		INFO("log", ec.message());
 		error_code_t ec;
 		session->socket.close(ec);
-		//app->io_context.run();
 		return;
 	}
 	else
@@ -180,7 +177,6 @@ void accept_handler(const error_code_t &ec,
 		INFO("log", ec.message());
 		error_code_t ec;
 		session->socket.close(ec);
-		app->io_context.run();
 	}
 	else
 	{
