@@ -53,6 +53,7 @@ public:
 
 	void clear();
 	void run();
+	error_code_t close();
 
 	static std::size_t read_size;
 	static std::size_t write_size;

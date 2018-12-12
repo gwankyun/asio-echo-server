@@ -24,6 +24,14 @@ void session_t::clear()
 	read_offset = 0;
 }
 
+error_code_t session_t::close()
+{
+	INFO("log");
+	error_code_t ec;
+	socket.close(ec);
+	return ec;
+}
+
 void session_t::run()
 {
 	INFO("log");
@@ -45,9 +53,8 @@ void write_handler(const error_code_t &ec,
 	if (ec)
 	{
 		INFO("log", ec.message());
-		error_code_t ec;
-		session->socket.close(ec);
-		app->io_context.run();
+		session->close();
+		return;
 	}
 	else
 	{
@@ -105,8 +112,7 @@ void read_handler(const error_code_t &ec,
 	if (ec)
 	{
 		INFO("log", ec.message());
-		error_code_t ec;
-		session->socket.close(ec);
+		session->close();
 		return;
 	}
 	else
@@ -172,11 +178,11 @@ void accept_handler(const error_code_t &ec,
 	shared_ptr<application_t> app,
 	acceptor_t &acceptor)
 {
+	INFO("log");
 	if (ec)
 	{
 		INFO("log", ec.message());
-		error_code_t ec;
-		session->socket.close(ec);
+		session->close();
 	}
 	else
 	{
@@ -191,15 +197,14 @@ void accept_handler(const error_code_t &ec,
 		session->app = app;
 
 		session->run();
-
-		auto next_session = make_shared<session_t>(app->io_context);
-		
-		acceptor.async_accept(next_session->socket, 
-			[next_session, app, &acceptor](const error_code_t &ec)
-		{
-			accept_handler(ec, next_session, app, acceptor);
-		});
 	}
+	auto next_session = make_shared<session_t>(app->io_context);
+
+	acceptor.async_accept(next_session->socket,
+		[next_session, app, &acceptor](const error_code_t &ec)
+	{
+		accept_handler(ec, next_session, app, acceptor);
+	});
 }
 
 int main()
