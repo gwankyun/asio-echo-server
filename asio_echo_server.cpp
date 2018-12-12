@@ -7,31 +7,6 @@
 std::size_t session_t::read_size = 2;
 std::size_t session_t::write_size = 2;
 
-session_t::session_t(io_context_t &io_context)
-	: socket(io_context)
-{
-}
-
-session_t::~session_t()
-{
-	INFO("log", "address:{0} port:{1}", address, port);
-}
-
-void session_t::clear()
-{
-	INFO("log");
-	buffer.clear();
-	read_offset = 0;
-}
-
-error_code_t session_t::close()
-{
-	INFO("log");
-	error_code_t ec;
-	socket.close(ec);
-	return ec;
-}
-
 void session_t::run()
 {
 	INFO("log");
@@ -83,7 +58,7 @@ void write_handler(const error_code_t &ec,
 				});
 				if (!r)
 				{
-					app->io_context.run();
+					app->run();
 					return;
 				}
 				return;
@@ -97,7 +72,7 @@ void write_handler(const error_code_t &ec,
 		});
 		if (!w)
 		{
-			app->io_context.run();
+			app->run();
 			return;
 		}
 	}
@@ -152,7 +127,7 @@ void read_handler(const error_code_t &ec,
 			});
 			if (!w)
 			{
-				app->io_context.run();
+				app->run();
 				return;
 			}
 		}
@@ -166,7 +141,7 @@ void read_handler(const error_code_t &ec,
 			});
 			if (!r)
 			{
-				app->io_context.run();
+				app->run();
 				return;
 			}
 		}
@@ -226,6 +201,6 @@ int main()
 		});
 	}
 
-	io_context.run();
+	app->run();
 	return 0;
 }

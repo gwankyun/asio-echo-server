@@ -62,6 +62,31 @@ private:
 
 };
 
+session_t::session_t(io_context_t &io_context)
+	: socket(io_context)
+{
+}
+
+session_t::~session_t()
+{
+	INFO("log", "address:{0} port:{1}", address, port);
+}
+
+void session_t::clear()
+{
+	INFO("log");
+	buffer.clear();
+	read_offset = 0;
+}
+
+error_code_t session_t::close()
+{
+	INFO("log");
+	error_code_t ec;
+	socket.close(ec);
+	return ec;
+}
+
 class application_t
 {
 public:
@@ -69,6 +94,7 @@ public:
 	~application_t();
 
 	io_context_t io_context;
+	void run();
 
 private:
 
@@ -80,6 +106,11 @@ application_t::application_t()
 
 application_t::~application_t()
 {
+}
+
+void application_t::run()
+{
+	io_context.run();
 }
 
 template<typename H>
