@@ -52,8 +52,8 @@ public:
 	void run();
 	error_code_t close();
 
-	static std::size_t read_size;
-	static std::size_t write_size;
+	//static std::size_t read_size;
+	//static std::size_t write_size;
 
 private:
 
@@ -85,7 +85,7 @@ error_code_t session_t::close()
 }
 
 template<typename H>
-bool async_write(shared_ptr<session_t> session, H handler)
+bool async_write(shared_ptr<session_t> session, std::size_t size, H handler)
 {
 	INFO("log");
 	auto &socket = session->socket;
@@ -98,10 +98,10 @@ bool async_write(shared_ptr<session_t> session, H handler)
 		auto &is_write = session->is_write;
 		if (!is_write)
 		{
-			auto size = std::min(session_t::write_size, front.size() - write_offset);
+			auto wsize = std::min(size, front.size() - write_offset);
 			is_write = true;
 			socket.async_write_some(
-				asio::buffer(front.data() + write_offset, size),
+				asio::buffer(front.data() + write_offset, wsize),
 				handler);
 			return true;
 		}
@@ -110,7 +110,7 @@ bool async_write(shared_ptr<session_t> session, H handler)
 }
 
 template<typename H>
-bool async_read(shared_ptr<session_t> session, H handler)
+bool async_read(shared_ptr<session_t> session, std::size_t size,  H handler)
 {
 	INFO("log");
 	auto &buffer = session->buffer;
@@ -120,10 +120,10 @@ bool async_read(shared_ptr<session_t> session, H handler)
 
 	if (!is_read)
 	{
-		buffer.resize(read_offset + session_t::read_size);
+		buffer.resize(read_offset + size);
 		is_read = true;
 		socket.async_read_some(
-			asio::buffer(buffer.data() + read_offset, session_t::read_size),
+			asio::buffer(buffer.data() + read_offset, size),
 			handler);
 		return true;
 	}

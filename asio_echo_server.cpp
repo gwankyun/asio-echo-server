@@ -4,14 +4,11 @@
 //#include "pch.h"
 #include "asio_echo_server.h"
 
-std::size_t session_t::read_size = 2;
-std::size_t session_t::write_size = 2;
-
 void session_t::run()
 {
 	INFO("log");
 	auto self(shared_from_this());
-	auto r = async_read(self,
+	auto r = async_read(self, 2,
 		[self](const error_code_t &ec, std::size_t size)
 	{
 		read_handler(ec, size, self);
@@ -49,7 +46,7 @@ void write_handler(const error_code_t &ec,
 			if (write_queue.empty())
 			{
 				session->clear();
-				auto r = async_read(session,
+				auto r = async_read(session, 2,
 					[session](const error_code_t &ec, std::size_t size)
 				{
 					read_handler(ec, size, session);
@@ -63,7 +60,7 @@ void write_handler(const error_code_t &ec,
 			}
 		}
 
-		auto w = async_write(session,
+		auto w = async_write(session, 2,
 			[session](const error_code_t &ec, std::size_t size)
 		{
 			write_handler(ec, size, session);
@@ -102,7 +99,7 @@ void read_handler(const error_code_t &ec,
 
 		read_offset += size;
 
-		INFO("log", "session->size:{0} g_one_size:{1} size:{2}", read_offset, session_t::read_size, size);
+		//INFO("log", "session->size:{0} g_one_size:{1} size:{2}", read_offset, session_t::read_size, size);
 
 		INFO("log", "buffer size:{0}", buffer.size());
 
@@ -117,7 +114,7 @@ void read_handler(const error_code_t &ec,
 
 			session->clear();
 
-			auto w = async_write(session,
+			auto w = async_write(session, 2,
 				[session](const error_code_t &ec, std::size_t size)
 			{
 				write_handler(ec, size, session);
@@ -131,7 +128,7 @@ void read_handler(const error_code_t &ec,
 		else
 		{
 			INFO("log");
-			auto r = async_read(session,
+			auto r = async_read(session, 2,
 				[session](const error_code_t &ec, std::size_t size)
 			{
 				read_handler(ec, size, session);
