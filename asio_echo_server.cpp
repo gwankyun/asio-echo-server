@@ -7,7 +7,7 @@
 void session_t::run()
 {
 	INFO("log");
-	auto self(shared_from_this());
+	auto self(session_t::shared_from_this());
 	auto r = async_read(self, 2,
 		[self](const error_code_t &ec, std::size_t size)
 	{
@@ -53,7 +53,7 @@ void write_handler(const error_code_t &ec,
 				});
 				if (!r)
 				{
-					session->socket.get_io_context().run();
+					session->socket->get_io_context().run();
 					return;
 				}
 				return;
@@ -67,7 +67,7 @@ void write_handler(const error_code_t &ec,
 		});
 		if (!w)
 		{
-			session->socket.get_io_context().run();
+			session->socket->get_io_context().run();
 			return;
 		}
 	}
@@ -121,7 +121,7 @@ void read_handler(const error_code_t &ec,
 			});
 			if (!w)
 			{
-				session->socket.get_io_context().run();
+				session->socket->get_io_context().run();
 				return;
 			}
 		}
@@ -135,7 +135,7 @@ void read_handler(const error_code_t &ec,
 			});
 			if (!r)
 			{
-				session->socket.get_io_context().run();
+				session->socket->get_io_context().run();
 				return;
 			}
 		}
@@ -143,20 +143,20 @@ void read_handler(const error_code_t &ec,
 }
 
 void accept_handler(const error_code_t &ec, 
-	shared_ptr<session_t> session,
+	shared_ptr<socket_t> socket,
 	acceptor_t &acceptor)
 {
 	INFO("log");
 	if (ec)
 	{
 		INFO("log", ec.message());
-		session->close();
+		socket->close();
 	}
 	else
 	{
-		auto &socket = session->socket;
+		auto session = make_shared<session_t>(socket);
 		auto &buffer = session->buffer;
-		auto re = socket.remote_endpoint();
+		auto re = socket->remote_endpoint();
 		auto address = re.address().to_string();
 		auto port = re.port();
 		INFO("log", "address:{0} port:{1}", address, port);
@@ -165,12 +165,12 @@ void accept_handler(const error_code_t &ec,
 
 		session->run();
 	}
-	auto next_session = make_shared<session_t>(session->socket.get_io_context());
+	auto next_socket = make_shared<socket_t>(socket->get_io_context());
 
-	acceptor.async_accept(next_session->socket,
-		[next_session, &acceptor](const error_code_t &ec)
+	acceptor.async_accept(*next_socket,
+		[next_socket, &acceptor](const error_code_t &ec)
 	{
-		accept_handler(ec, next_session, acceptor);
+		accept_handler(ec, next_socket, acceptor);
 	});
 }
 
@@ -183,12 +183,12 @@ int main()
 		endpoint_t(address_t::from_string("0.0.0.0"), 12500));
 
 	{
-		auto session = make_shared<session_t>(io_context);
+		auto socket = make_shared<socket_t>(io_context);
 
-		acceptor.async_accept(session->socket,
-			[session, &acceptor](const error_code_t &ec)
+		acceptor.async_accept(*socket,
+			[socket, &acceptor](const error_code_t &ec)
 		{
-			accept_handler(ec, session, acceptor);
+			accept_handler(ec, socket, acceptor);
 		});
 	}
 

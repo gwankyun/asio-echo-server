@@ -32,13 +32,14 @@ using acceptor_t = tcp_t::acceptor;
 using resolver_t = tcp_t::resolver;
 using error_code_t = boost::system::error_code;
 
-class session_t : public std::enable_shared_from_this<session_t>
+class session_base_t
 {
 public:
-	session_t(io_context_t &io_context);
-	~session_t();
+	session_base_t() = default;
+	session_base_t(shared_ptr<socket_t> socket_);
+	virtual ~session_base_t();
 
-	socket_t socket;
+	shared_ptr<socket_t> socket;
 	vector<char> buffer;
 	std::size_t read_offset = 0;
 	std::size_t write_offset = 0;
@@ -49,43 +50,40 @@ public:
 	bool is_read = false;
 
 	void clear();
-	void run();
+	virtual void run() = 0;
 	error_code_t close();
-
-	//static std::size_t read_size;
-	//static std::size_t write_size;
 
 private:
 
 };
 
-session_t::session_t(io_context_t &io_context)
-	: socket(io_context)
+session_base_t::session_base_t(shared_ptr<socket_t> socket_)
 {
+	socket = socket_;
 }
 
-session_t::~session_t()
+session_base_t::~session_base_t()
 {
 	INFO("log", "address:{0} port:{1}", address, port);
 }
 
-void session_t::clear()
+void session_base_t::clear()
 {
 	INFO("log");
 	buffer.clear();
 	read_offset = 0;
 }
 
-error_code_t session_t::close()
+error_code_t session_base_t::close()
 {
 	INFO("log");
 	error_code_t ec;
-	socket.close(ec);
+	socket->close(ec);
 	return ec;
 }
 
-template<typename H>
-bool async_write(shared_ptr<session_t> session, std::size_t size, H handler)
+template<typename S, typename H>
+bool async_write(shared_ptr<S> session, std::size_t size, H handler)
 {
 	INFO("log");
 	auto &socket = session->socket;
@@ -100,7 +98,7 @@ bool async_write(shared_ptr<session_t> session, std::size_t size, H handler)
 		{
 			auto wsize = std::min(size, front.size() - write_offset);
 			is_write = true;
-			socket.async_write_some(
+			socket->async_write_some(
 				asio::buffer(front.data() + write_offset, wsize),
 				handler);
 			return true;
@@ -109,8 +107,8 @@ bool async_write(shared_ptr<session_t> session, std::size_t size, H handler)
 	return false;
 }
 
-template<typename H>
-bool async_read(shared_ptr<session_t> session, std::size_t size,  H handler)
+template<typename S, typename H>
+bool async_read(shared_ptr<S> session, std::size_t size,  H handler)
 {
 	INFO("log");
 	auto &buffer = session->buffer;
@@ -122,7 +120,7 @@ bool async_read(shared_ptr<session_t> session, std::size_t size,  H handler)
 	{
 		buffer.resize(read_offset + size);
 		is_read = true;
-		socket.async_read_some(
+		socket->async_read_some(
 			asio::buffer(buffer.data() + read_offset, size),
 			handler);
 		return true;
