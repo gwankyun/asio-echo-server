@@ -6,7 +6,7 @@ class session_t : public session_base_t, public std::enable_shared_from_this<ses
 public:
 	session_t() = default;
 	session_t(shared_ptr<socket_t> socket_);
-	~session_t() override;
+	~session_t() = default;
 
 	void run() override;
 
@@ -17,10 +17,6 @@ private:
 session_t::session_t(shared_ptr<socket_t> socket_)
 {
 	socket = socket_;
-}
-
-session_t::~session_t()
-{
 }
 
 void write_handler(const error_code_t &ec,
