@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <queue>
 #include <functional>
+#include <type_traits>
 
 #include <boost/asio.hpp>
 
@@ -85,7 +86,9 @@ error_code_t session_base_t::close()
 template<typename S, typename H>
 bool async_write(shared_ptr<S> session, std::size_t size, H handler)
 {
+	using namespace std;
 	INFO("log");
+	static_assert(is_base_of<session_base_t, S>::value);
 	auto &socket = session->socket;
 	auto &write_queue = session->write_queue;
 
@@ -110,7 +113,9 @@ bool async_write(shared_ptr<S> session, std::size_t size, H handler)
 template<typename S, typename H>
 bool async_read(shared_ptr<S> session, std::size_t size,  H handler)
 {
+	using namespace std;
 	INFO("log");
+	static_assert(is_base_of<session_base_t, S>::value);
 	auto &buffer = session->buffer;
 	auto &socket = session->socket;
 	auto &read_offset = session->read_offset;
