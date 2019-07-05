@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.14)
 # 啟用IDE目錄功能
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-# 输出目录
+# 輸出目錄
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
@@ -24,9 +24,9 @@ target_sources(main
 
 set_target_properties(main PROPERTIES DEBUG_POSTFIX "_debug")
 
-add_definitions(/W4)
+add_definitions(/W4 /MP)
 
-# 头文件目录
+# 頭文件目錄
 target_include_directories(main
 	PRIVATE 
         C:/Users/ljqic/Documents/GitHub/spdlog/include
