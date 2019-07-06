@@ -7,7 +7,16 @@
 #include <boost/system/error_code.hpp>
 #include <spdlog_easy.hpp>
 #include <boost/algorithm/hex.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_io.hpp>
+#include <boost/uuid/uuid_generators.hpp>
 #include "buffer.h"
+
+inline std::string make_uuid()
+{
+    auto uuid = boost::uuids::random_generator()();
+    return std::move(boost::uuids::to_string(uuid));
+}
 
 template<typename Range>
 std::string to_hex(const Range& range)
@@ -29,13 +38,14 @@ public:
     session_t(
         std::shared_ptr<io_context_t> _io_context,
         std::shared_ptr<acceptor_t> _acceptor)
-        :io_context(_io_context), acceptor(_acceptor), socket(*io_context)
+        :io_context(_io_context), acceptor(_acceptor), socket(*io_context), id(make_uuid())
     {
+        LOG(info, id);
     }
 
     ~session_t()
     {
-        LOG(info);
+        LOG(info, id);
     }
 
     std::shared_ptr<io_context_t> io_context;
@@ -43,6 +53,7 @@ public:
     socket_t socket;
     buffer_t read_buffer;
     buffer_t write_buffer;
+    std::string id;
 };
 
 template<typename F>
