@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <map>
 #include <boost/asio.hpp>
 #include <boost/system/error_code.hpp>
 #include <spdlog_easy.hpp>
@@ -33,12 +34,15 @@ class session_t
     using acceptor_t = boost::asio::ip::tcp::acceptor;
     using socket_t = boost::asio::ip::tcp::socket;
 public:
+    static std::map<std::string, std::shared_ptr<session_t>> manager;
+
     session_t() = default;
 
     session_t(
         std::shared_ptr<io_context_t> _io_context,
         std::shared_ptr<acceptor_t> _acceptor)
-        :io_context(_io_context), acceptor(_acceptor), socket(*io_context), id(make_uuid())
+        :io_context(_io_context), acceptor(_acceptor), socket(*io_context),
+        id(make_uuid()), unix_time(0)
     {
         LOG(info, id);
     }
@@ -54,6 +58,7 @@ public:
     buffer_t read_buffer;
     buffer_t write_buffer;
     std::string id;
+    uint64_t unix_time;
 };
 
 template<typename F>
