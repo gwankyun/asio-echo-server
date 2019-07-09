@@ -34,7 +34,6 @@ class session_t
     using acceptor_t = boost::asio::ip::tcp::acceptor;
     using socket_t = boost::asio::ip::tcp::socket;
 public:
-    static std::map<std::string, std::shared_ptr<session_t>> manager;
 
     session_t() = default;
 

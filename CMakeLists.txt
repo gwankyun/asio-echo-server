@@ -20,6 +20,8 @@ target_sources(main
         src/buffer.h
         src/buffer.cpp
         src/session.hpp
+        src/handler.h
+        src/handler.cpp
 )
 
 set_target_properties(main PROPERTIES DEBUG_POSTFIX "_debug")
