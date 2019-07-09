@@ -150,7 +150,7 @@ void on_wait(error_code_t ec, shared_ptr<steady_timer_t> timer)
         }
     }
 
-    timer->expires_from_now(chrono::seconds(3));
+    timer->expires_from_now(chrono::seconds(get_config().timer_interval));
     timer->async_wait(
         [timer](error_code_t ec)
     {
