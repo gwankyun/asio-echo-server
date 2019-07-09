@@ -31,7 +31,7 @@ target_include_directories(main
 	PRIVATE 
         C:/Users/ljqic/Documents/GitHub/spdlog/include
         C:/local/boost_1_70_0
-        C:/Users/ljqic/Documents/GitHub/spdlog-easy/include
+        M:/cmake/spdlog-easy/include
 )
 
 target_link_directories(main
