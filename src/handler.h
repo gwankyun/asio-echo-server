@@ -18,6 +18,7 @@ struct config_t
     std::size_t timer_interval = 1;
     std::size_t timeout = 1;
     std::map<std::string, std::shared_ptr<session_t>> manager;
+    uint16_t port;
 };
 
 config_t& get_config();

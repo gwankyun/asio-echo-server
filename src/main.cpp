@@ -27,11 +27,14 @@ int main()
     config.write_size = 2;
     config.timer_interval = 3;
     config.timeout = 10;
+    config.port = 12345;
+    spdlog::easy::get_config().file_size = 5;
+    spdlog::easy::get_config().func_size = 10;
     spdlog::easy::init();
     auto io_context = make_shared<io_context_t>();
     auto acceptor = make_shared<acceptor_t>(
         *io_context,
-        endpoint_t(address_t::from_string("0.0.0.0"), 12345));
+        endpoint_t(address_t::from_string("0.0.0.0"), config.port));
     {
         auto session = make_shared<session_t>(io_context, acceptor);
         async_accept(session, on_accept);
